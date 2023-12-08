@@ -1,0 +1,9 @@
+[Unit]
+Description=radio_handler
+
+[Service]
+User=pi
+ExecStart=/home/pi/alarmclock-webradio/service_radio.sh
+
+[Install]
+WantedBy=multi-user.target

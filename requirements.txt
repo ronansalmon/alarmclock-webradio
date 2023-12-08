@@ -1,0 +1,5 @@
+luma.led_matrix
+pyky040
+spidev
+Adafruit-SSD1306
+paho-mqtt

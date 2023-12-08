@@ -1,0 +1,22 @@
+[default]
+radio_url = https://alouette-nantes.ice.infomaniak.ch/alouette-nantes-128.mp3
+  http://spoonradio.ice.infomaniak.ch/spoonradio-hd
+
+radio_fallback = sound/file1.mp3
+  sound/file2.mp3
+
+sound_device = Headphone
+sound_volume = 90%
+
+[rotary_sound]
+GPIO_CLK = 13
+GPIO_DT = 6
+GPIO_SW = 5
+
+[rotary_menu]
+GPIO_CLK = 22
+GPIO_DT = 27
+GPIO_SW = 17
+
+[oled]
+
