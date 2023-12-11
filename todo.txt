@@ -1,14 +1,6 @@
 
 - load/save defaults
-- webradio
 - internet up ?
-- detect no sound
-
-- menu sound
--- inc/volume up (if radio on) < max -> save value
--- dec/volume down (if radio on) > min -> save value
--- volume start (if no radio on) : start thread
--- volume stop (if radio on) : stop thread
 
 
 - menu alarm

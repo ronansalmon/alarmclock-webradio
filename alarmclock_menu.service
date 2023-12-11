@@ -1,0 +1,9 @@
+[Unit]
+Description=menu_handler
+
+[Service]
+User=pi
+ExecStart=/home/pi/alarmclock-webradio/service_menu.sh
+
+[Install]
+WantedBy=multi-user.target

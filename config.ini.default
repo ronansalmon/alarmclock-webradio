@@ -5,8 +5,7 @@ radio_url = https://alouette-nantes.ice.infomaniak.ch/alouette-nantes-128.mp3
 radio_fallback = sound/file1.mp3
   sound/file2.mp3
 
-sound_device = Headphone
-sound_volume = 90%
+sound_volume = 90
 
 [rotary_sound]
 GPIO_CLK = 13
@@ -20,3 +19,6 @@ GPIO_SW = 17
 
 [oled]
 
+[alarm]
+alarm_enable = False
+alarm_time = 82000
