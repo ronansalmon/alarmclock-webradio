@@ -87,6 +87,9 @@ def on_message(client, userdata, message, properties=None):
       else:
         # start music
         process.start()
+    elif payload['cmd'] == 'long_push':
+        # kill ffplay to move on the next available radio/file
+        os.system('killall -9 ffplay')
     else:
       print(f"WTF! Topic: {message.topic}, payload: {payload}")
 
