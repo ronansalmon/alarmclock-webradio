@@ -72,6 +72,12 @@ def on_message(client, userdata, message, properties=None):
       os.system("amixer -q sset PCM '100%-'")
     elif payload['cmd'] == 'increase':
       os.system("amixer -q sset PCM '100%+'")
+    elif payload['cmd'] == 'setvolume':
+      try:
+        volume = int(payload['volume'])
+      except:
+        volume = 90
+      os.system(f"amixer -q sset PCM '{volume}%'")
     elif payload['cmd'] == 'simple_push':
       if process.is_alive():
         # stop music
