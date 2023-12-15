@@ -1,10 +1,4 @@
 [default]
-radio_url = https://alouette-nantes.ice.infomaniak.ch/alouette-nantes-128.mp3
-  http://spoonradio.ice.infomaniak.ch/spoonradio-hd
-
-radio_fallback = sound/file1.mp3
-  sound/file2.mp3
-
 sound_volume = 90
 
 [rotary_sound]

@@ -8,13 +8,16 @@ import multiprocessing as mp
 
 process = None
 
-def thread_radio(radio_url, radio_fallback):
+def thread_radio():
   try:
     print('Radio kickoff')
-    url_index = 0
+    with open('media.json', 'r') as config_file:
+      medias_list = json.load(config_file)
+
+    media_index = 0
     errors = 0
-    sound_list = radio_url
-    proc = subprocess.Popen(['ffplay', '-nodisp', '-hide_banner', '-loglevel', 'error', sound_list[url_index]])
+    proc = subprocess.Popen(['ffplay', '-nodisp', '-hide_banner', '-loglevel', 'error', medias_list['medias'][media_index]['link']])
+    print(medias_list['medias'][media_index]['name'])
     # allow extra time to start since ffplay is slow to start
     time.sleep(3)
     while True:
@@ -34,19 +37,16 @@ def thread_radio(radio_url, radio_fallback):
       if proc.poll() is not None:
         errors = 99
 
+      # too many errors, swapping on next media
       if errors > 3:
-        # too many errors, swapping on next media
         proc.terminate()
         errors = 0
-        url_index = url_index + 1
-        if url_index >= len(sound_list):
-          url_index = 0
-          if sound_list == radio_url:
-            sound_list = radio_fallback
-          else:
-            sound_list = radio_url
+        media_index = media_index + 1
+        if media_index >= len(medias_list):
+          media_index = 0
 
-        proc = subprocess.Popen(['ffplay', '-nodisp', '-hide_banner', '-loglevel', 'error', sound_list[url_index]])
+        proc = subprocess.Popen(['ffplay', '-nodisp', '-hide_banner', '-loglevel', 'error', medias_list['medias'][media_index]['link']])
+        print(medias_list['medias'][media_index]['name'])
         # allow extra time to start since ffplay is slow to start
         time.sleep(3)
 
@@ -102,12 +102,10 @@ if __name__ == '__main__':
   try:
     config = configparser.ConfigParser()
     config.read('config.ini')
-    radio_url = config['default']['radio_url'].split("\n")
-    radio_fallback = config['default']['radio_fallback'].split("\n")
 
     # init default volume
     os.system(f"amixer -q sset PCM '{config['default']['sound_volume']}%'")
-    process = mp.Process(target=thread_radio, args=(radio_url, radio_fallback))
+    process = mp.Process(target=thread_radio)
     
     client = mqtt.Client(client_id="alarmclock_radio", protocol=mqtt.MQTTv311, clean_session=True)
     client.on_connect = on_connect

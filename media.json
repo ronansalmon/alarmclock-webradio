@@ -1,0 +1,22 @@
+{
+  "medias": [
+    {
+      "link": "https://alouette-nantes.ice.infomaniak.ch/alouette-nantes-128.mp3",
+      "name": "alouette"
+    },
+    {
+      "link": "http://spoonradio.ice.infomaniak.ch/spoonradio-hd",
+      "name": "spoonradio"
+    },
+    {
+      "link": "sound/file1.mp3",
+      "name": "file1"
+    },
+    {
+      "link": "sound/file2.mp3",
+      "name": "file2"
+    }
+  ]
+}
+  
+
