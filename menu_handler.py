@@ -77,29 +77,41 @@ def on_message(client, userdata, message, properties=None):
     print(mode)
     
     if payload['cmd'] == 'decrease':
-      # TODO: must update oled
       if mode == 1:
-        alarm_time - 60
+        alarm_time = alarm_time - 60
+        update_oled(time.strftime("%H:%M", time.gmtime(alarm_time)) + " #")
+      elif mode == 2:
+        alarm_time = alarm_time - 600
+        update_oled(time.strftime("%H:%M", time.gmtime(alarm_time)) + " #")
+      elif mode == 3:
+        alarm_time = alarm_time - 3600
         update_oled(time.strftime("%H:%M", time.gmtime(alarm_time)) + " #")
         
     elif payload['cmd'] == 'increase':
-      # TODO: must update oled
       if mode == 1:
-        alarm_time + 60
+        alarm_time = alarm_time + 60
+        update_oled(time.strftime("%H:%M", time.gmtime(alarm_time)) + " #")
+      elif mode == 2:
+        alarm_time = alarm_time + 600
+        update_oled(time.strftime("%H:%M", time.gmtime(alarm_time)) + " #")
+      elif mode == 3:
+        alarm_time = alarm_time + 3600
         update_oled(time.strftime("%H:%M", time.gmtime(alarm_time)) + " #")
 
     elif payload['cmd'] == 'simple_push':
       # toggle alarm on/off
       # and may need to leave setup mode
 
-      # TODO: must update oled
-
       if mode == 1:
         # leaving setup mode, we must save the new settings
+        print('TODO strftime("%H:%M") to int to str to config file')
+        
         config['alarm']['alarm_time'] = alarm_time
         with open('config.ini', 'w') as configfile:
           config.write(configfile)
         mode = 0
+      elif mode > 0:
+        mode = mode - 1
 
       if process is not None and process.is_alive():
         # stop music
@@ -114,7 +126,11 @@ def on_message(client, userdata, message, properties=None):
         update_oled(time.strftime("%H:%M", time.gmtime(alarm_time)))
 
     elif payload['cmd'] == 'long_push':
-      mode = 1
+      if mode != 0:
+        # buggy rotary
+        return
+      else:
+        mode = 3
       # disable alarm. user will have to enable it again after setting new time
       if process is not None and process.is_alive():
         # stop music
