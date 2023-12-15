@@ -44,8 +44,8 @@ GPIO pin-outs Oled
 | :----------: | :-----:      | --------: | :-----------
 |          VCC | +5V Power   | 4        | 5V0 
 |          GND |  Ground     | 6        | GND 
-|          SCL |  Data In     | 5       | GPIO 3 (SCL)
-|          SDA |  Data In     | 3       | GPIO 2 (SDA)
+|          SCL |  Data In    | 5        | GPIO 3 (SCL)
+|          SDA |  Data In    | 3        | GPIO 2 (SDA)
 
 
 usermod -a -G spi,gpio,i2c pi

@@ -15,41 +15,49 @@ gpio_callback_sound = 0
 gpio_callback_menu = 0
 
 def button_callback_sound(channel):
-  global start_time, button_callback_sound
-
+  global start_time
   if not GPIO.input(gpio_callback_sound):
     start_time = time.time()
   else:
     buttonTime = time.time() - start_time
-
-    if buttonTime >= 2:
-      # Long push
-      data = {"cmd": "long_push"}
-    elif buttonTime <= .01:
+  
+    if buttonTime <= .01:
       # Ignore noise
       return
+    elif buttonTime > 0.5:
+      if buttonTime < 2:
+        # short push
+        data = {"cmd": "short_push"}
+      else:
+        # long push
+        data = {"cmd": "long_push"}
     else:
       # simple push
       data = {"cmd": "simple_push"}
     try:
+      print(data)
       publish.single(topic_sound, payload=json.dumps(data), retain=False, hostname="127.0.0.1", port=1883, client_id=client_id, keepalive=60, will=None, auth=None, tls=None, transport="tcp")
     except:
       pass
       
 def button_callback_menu(channel):
-  global start_time, gpio_callback_menu
+  global start_time
 
   if not GPIO.input(gpio_callback_menu):
     start_time = time.time()
   else:
     buttonTime = time.time() - start_time
 
-    if buttonTime >= 2:
-      # Long push
-      data = {"cmd": "long_push"}
-    elif buttonTime <= .01:
+    if buttonTime <= .01:
       # Ignore noise
       return
+    elif buttonTime > 0.5:
+      if buttonTime < 2:
+        # short push
+        data = {"cmd": "short_push"}
+      else:
+        # long push
+        data = {"cmd": "long_push"}
     else:
       # simple push
       data = {"cmd": "simple_push"}
@@ -59,36 +67,36 @@ def button_callback_menu(channel):
       pass
 
 def dec_callback_sound(scale_position):
-  data = {"cmd": "decrease"}
   try:
+    data = {"cmd": "decrease"}
     publish.single(topic_sound, payload=json.dumps(data), retain=False, hostname="127.0.0.1", port=1883, client_id=client_id, keepalive=60, will=None, auth=None, tls=None, transport="tcp")
   except:
     pass
 
 def inc_callback_sound(scale_position):
-  data = {"cmd": "increase"}
   try:
+    data = {"cmd": "increase"}
     publish.single(topic_sound, payload=json.dumps(data), retain=False, hostname="127.0.0.1", port=1883, client_id=client_id, keepalive=60, will=None, auth=None, tls=None, transport="tcp")
   except:
     pass
 
-  
 def dec_callback_menu(scale_position):
-  data = {"menu": "decrease"}
   try:
+    data = {"menu": "decrease"}
     publish.single(topic_menu, payload=json.dumps(data), retain=False, hostname="127.0.0.1", port=1883, client_id=client_id, keepalive=60, will=None, auth=None, tls=None, transport="tcp")
   except:
     pass
 
 def inc_callback_menu(scale_position):
-  data = {"menu": "increase"}
   try:
+    data = {"menu": "increase"}
     publish.single(topic_menu, payload=json.dumps(data), retain=False, hostname="127.0.0.1", port=1883, client_id=client_id, keepalive=60, will=None, auth=None, tls=None, transport="tcp")
   except:
     pass
+
 def click_menu():
-  data = {"menu": "click"}
   try:
+    data = {"menu": "click"}
     publish.single(topic_menu, payload=json.dumps(data), retain=False, hostname="127.0.0.1", port=1883, client_id=client_id, keepalive=60, will=None, auth=None, tls=None, transport="tcp")
   except:
     pass

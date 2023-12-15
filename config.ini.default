@@ -12,7 +12,9 @@ GPIO_DT = 27
 GPIO_SW = 17
 
 [oled]
+address = 0x3c
+contrast = 255
 
 [alarm]
-alarm_enable = False
-alarm_time = 82000
+alarm_enable = True
+alarm_time = 25200

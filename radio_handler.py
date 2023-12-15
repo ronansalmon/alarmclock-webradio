@@ -4,20 +4,33 @@ import json
 import subprocess, os
 import traceback
 import paho.mqtt.client as mqtt
+import paho.mqtt.publish as publish
 import multiprocessing as mp
 
 process = None
+client_id = "publish-oled"
+topic_oled = "alarmclock_oled"
+
+def update_oled(msg):
+  try:
+    data = {"cmd": "media_text", "text": msg}
+    publish.single(topic_oled, payload=json.dumps(data), retain=False, hostname="127.0.0.1", port=1883, client_id=client_id, keepalive=60, will=None, auth=None, tls=None, transport="tcp")
+
+  except Exception as e:
+    traceback.print_exc()
+    print(e)
 
 def thread_radio():
   try:
     print('Radio kickoff')
     with open('media.json', 'r') as config_file:
-      medias_list = json.load(config_file)
+      playlist = json.load(config_file)
 
     media_index = 0
     errors = 0
-    proc = subprocess.Popen(['ffplay', '-nodisp', '-hide_banner', '-loglevel', 'error', medias_list['medias'][media_index]['link']])
-    print(medias_list['medias'][media_index]['name'])
+    proc = subprocess.Popen(['ffplay', '-autoexit', '-nodisp', '-hide_banner', '-loglevel', 'error', playlist['medias'][media_index]['link']])
+    update_oled(playlist['medias'][media_index]['name'])
+
     # allow extra time to start since ffplay is slow to start
     time.sleep(3)
     while True:
@@ -25,6 +38,7 @@ def thread_radio():
 
       result = subprocess.check_output('grep RUNNING /proc/asound/card*/pcm*/sub*/status |wc -l', shell=True, text=True)
       state = int(result.strip())
+      print(state)
 
       # make sure sound is coming out of player
       if state == 0:
@@ -42,11 +56,11 @@ def thread_radio():
         proc.terminate()
         errors = 0
         media_index = media_index + 1
-        if media_index >= len(medias_list):
+        if media_index >= len(playlist['medias']):
           media_index = 0
 
-        proc = subprocess.Popen(['ffplay', '-nodisp', '-hide_banner', '-loglevel', 'error', medias_list['medias'][media_index]['link']])
-        print(medias_list['medias'][media_index]['name'])
+        proc = subprocess.Popen(['ffplay', '-autoexit', '-nodisp', '-hide_banner', '-loglevel', 'error', playlist['medias'][media_index]['link']])
+        update_oled(playlist['medias'][media_index]['name'])
         # allow extra time to start since ffplay is slow to start
         time.sleep(3)
 
@@ -54,6 +68,7 @@ def thread_radio():
     traceback.print_exc()
     print(e)
   finally:
+    update_oled("")
     proc.kill()
     os.system('killall -9 ffplay')
 
@@ -69,24 +84,37 @@ def on_message(client, userdata, message, properties=None):
   try:
     payload = json.loads(message.payload)
     if payload['cmd'] == 'decrease':
+      # lower down volume
       os.system("amixer -q sset PCM '100%-'")
     elif payload['cmd'] == 'increase':
+      # louder please !
       os.system("amixer -q sset PCM '100%+'")
     elif payload['cmd'] == 'setvolume':
+      # set volume
       try:
         volume = int(payload['volume'])
       except:
         volume = 90
       os.system(f"amixer -q sset PCM '{volume}%'")
+    elif payload['cmd'] == 'short_push':
+      # move on next media in playlist
+      os.system('killall -9 ffplay')
     elif payload['cmd'] == 'simple_push':
-      if process.is_alive():
+      # toggle music
+      if process is not None and process.is_alive():
         # stop music
+        update_oled("")
         process.terminate()
         process.join()
+        process = None
         os.system('killall -9 ffplay')
       else:
         # start music
+        process = mp.Process(target=thread_radio)
         process.start()
+    elif payload['cmd'] == 'short_push':
+        # kill ffplay to move on the next available radio/file
+        os.system('killall -9 ffplay')
     elif payload['cmd'] == 'long_push':
         # kill ffplay to move on the next available radio/file
         os.system('killall -9 ffplay')
@@ -105,7 +133,6 @@ if __name__ == '__main__':
 
     # init default volume
     os.system(f"amixer -q sset PCM '{config['default']['sound_volume']}%'")
-    process = mp.Process(target=thread_radio)
     
     client = mqtt.Client(client_id="alarmclock_radio", protocol=mqtt.MQTTv311, clean_session=True)
     client.on_connect = on_connect

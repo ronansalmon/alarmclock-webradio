@@ -1,6 +1,10 @@
 {
   "medias": [
     {
+      "link": "sound/alarm.mp3",
+      "name": "alarm file"
+    },
+    {
       "link": "https://alouette-nantes.ice.infomaniak.ch/alouette-nantes-128.mp3",
       "name": "alouette"
     },

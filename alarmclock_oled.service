@@ -1,0 +1,9 @@
+[Unit]
+Description=rotary_handler
+
+[Service]
+User=pi
+ExecStart=/home/pi/alarmclock-webradio/service_oled.sh
+
+[Install]
+WantedBy=multi-user.target
