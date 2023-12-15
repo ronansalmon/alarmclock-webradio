@@ -8,13 +8,15 @@ import paho.mqtt.publish as publish
 import multiprocessing as mp
 
 process = None
-client_id = "publish-oled"
+client_id="alarmclock_radio"
+client_id_publish = "publish-oled"
 topic_oled = "alarmclock_oled"
+topic_sound = "alarmclock_sound"
 
 def update_oled(msg):
   try:
     data = {"cmd": "media_text", "text": msg}
-    publish.single(topic_oled, payload=json.dumps(data), retain=False, hostname="127.0.0.1", port=1883, client_id=client_id, keepalive=60, will=None, auth=None, tls=None, transport="tcp")
+    publish.single(topic_oled, payload=json.dumps(data), retain=False, hostname="127.0.0.1", port=1883, client_id=client_id_publish, keepalive=60, will=None, auth=None, tls=None, transport="tcp")
 
   except Exception as e:
     traceback.print_exc()
@@ -74,7 +76,7 @@ def thread_radio():
 
 
 def on_connect(client, userdata, flags, reason_code, properties=None):
-  client.subscribe(topic="alarmclock_sound")
+  client.subscribe(topic=topic_sound)
 
 def on_subscribe(client, userdata, mid, qos, properties=None):
   print(f"Subscribed with QoS {qos}")
@@ -134,7 +136,7 @@ if __name__ == '__main__':
     # init default volume
     os.system(f"amixer -q sset PCM '{config['default']['sound_volume']}%'")
     
-    client = mqtt.Client(client_id="alarmclock_radio", protocol=mqtt.MQTTv311, clean_session=True)
+    client = mqtt.Client(client_id=client_id, protocol=mqtt.MQTTv311, clean_session=True)
     client.on_connect = on_connect
     client.on_message = on_message
     client.on_subscribe = on_subscribe

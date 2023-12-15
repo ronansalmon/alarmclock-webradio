@@ -52,5 +52,14 @@ usermod -a -G spi,gpio,i2c pi
 
 
 # test radio
-ffplay -nodisp -hide_banner -loglevel error https://alouette-nantes.ice.infomaniak.ch/alouette-nantes-128.mp3
+ffplay -autoexit -nodisp -hide_banner -loglevel error https://alouette-nantes.ice.infomaniak.ch/alouette-nantes-128.mp3
+
+
+
+# restart all
+
+sudo systemctl restart alarmclock_oled
+sudo systemctl restart alarmclock_menu
+sudo systemctl restart alarmclock_radio
+sudo systemctl restart alarmclock_rotary
 

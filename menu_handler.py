@@ -9,7 +9,8 @@ import shutil
 from time import strftime
 from time import gmtime
 
-client_id = "publish-rotary-menu"
+client_id = "alarmclock_menu"
+client_idpublish = "publish-rotary-menu"
 topic_sound = "alarmclock_sound"
 topic_menu = "alarmclock_menu"
 process = None
@@ -41,14 +42,14 @@ def thread_alarm():
     # time to wakeup now !
     
     data = {"cmd": "simple_push"}
-    publish.single(topic_sound, payload=json.dumps(data), retain=False, hostname="127.0.0.1", port=1883, client_id=client_id, keepalive=60, will=None, auth=None, tls=None, transport="tcp")
+    publish.single(topic_sound, payload=json.dumps(data), retain=False, hostname="127.0.0.1", port=1883, client_id=client_idpublish, keepalive=60, will=None, auth=None, tls=None, transport="tcp")
     
   except Exception as e:
     traceback.print_exc()
     print(e)
 
 def on_connect(client, userdata, flags, reason_code, properties=None):
-  client.subscribe(topic="alarmclock_menu")
+  client.subscribe(topic=topic_menu)
 
 def on_subscribe(client, userdata, mid, qos, properties=None):
   print(f"Subscribed with QoS {qos}")
@@ -106,18 +107,18 @@ def on_message(client, userdata, message, properties=None):
 if __name__ == '__main__':
   try:
     # default config file
-    if import os.path.exists('config.ini') == False;
+    if os.path.exists('config.ini') == False:
       shutil.copy('config.ini.default', 'config.ini')
       
     config = configparser.ConfigParser()
     config.read('config.ini')
-
+    print("Menu Handler Started")
     #process = mp.Process(target=thread_radio, args=(radio_url, radio_fallback))
     
-    client = mqtt.Client(client_id="alarmclock_menu", protocol=mqtt.MQTTv311, clean_session=True)
+    client = mqtt.Client(client_id=client_id, protocol=mqtt.MQTTv311, clean_session=True)
     client.on_connect = on_connect
-    client.on_message = on_message
     client.on_subscribe = on_subscribe
+    client.on_message = on_message
     client.connect(host="127.0.0.1", port=1883, keepalive=60)
     
     client.loop_forever()

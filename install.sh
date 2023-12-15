@@ -36,3 +36,5 @@ sudo systemctl disable triggerhappy.socket
 sudo systemctl stop triggerhappy
 sudo systemctl disable triggerhappy
 
+
+

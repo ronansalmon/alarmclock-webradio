@@ -10,6 +10,8 @@ from ast import literal_eval
 from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 
+client_id = "alarmclock_oled"
+topic = "alarmclock_oled"
 
 # Setting some variables for our reset pin etc.
 RESET_PIN = digitalio.DigitalInOut(board.D4)
@@ -22,7 +24,7 @@ alarm_text = ""
 media_text = ""
 
 def on_connect(client, userdata, flags, reason_code, properties=None):
-  client.subscribe(topic="alarmclock_oled")
+  client.subscribe(topic=topic)
 
 def on_subscribe(client, userdata, mid, qos, properties=None):
   print(f"Subscribed with QoS {qos}")
@@ -75,7 +77,7 @@ if __name__ == '__main__':
     oled.image(image)
     oled.show()
 
-    client = mqtt.Client(client_id="alarmclock_menu", protocol=mqtt.MQTTv311, clean_session=True)
+    client = mqtt.Client(client_id=client_id, protocol=mqtt.MQTTv311, clean_session=True)
     client.on_connect = on_connect
     client.on_message = on_message
     client.on_subscribe = on_subscribe
