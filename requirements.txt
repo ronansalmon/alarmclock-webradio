@@ -1,5 +1,3 @@
-luma.led_matrix
-pyky040
 spidev
 adafruit-circuitpython-ssd1306
 paho-mqtt

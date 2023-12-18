@@ -15,16 +15,13 @@ pip install -r requirements.txt
 sudo ln -sf /home/pi/alarmclock-webradio/alarmclock_oled.service /lib/systemd/system/alarmclock_oled.service
 sudo ln -sf /home/pi/alarmclock-webradio/alarmclock_menu.service /lib/systemd/system/alarmclock_menu.service
 sudo ln -sf /home/pi/alarmclock-webradio/alarmclock_radio.service /lib/systemd/system/alarmclock_radio.service
-sudo ln -sf /home/pi/alarmclock-webradio/alarmclock_rotary.service /lib/systemd/system/alarmclock_rotary.service
 sudo systemctl daemon-reload
 sudo systemctl start alarmclock_oled
 sudo systemctl start alarmclock_menu
 sudo systemctl start alarmclock_radio
-sudo systemctl start alarmclock_rotary
 sudo systemctl enable alarmclock_oled
 sudo systemctl enable alarmclock_menu
 sudo systemctl enable alarmclock_radio
-sudo systemctl enable alarmclock_rotary
 
 
 sudo systemctl stop dbus
