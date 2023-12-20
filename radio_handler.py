@@ -21,14 +21,14 @@ class Radio():
   start_time_sound = 0
   process = None
   default_volume = '0'
-  
+
   def __init__(self):
-    
+
     # default values
     config = configparser.ConfigParser()
     config.read('config.ini')
-    default_volume = config['default']['sound_volume']
-    
+    self.default_volume = config['default']['sound_volume']
+
     rotary = RotaryEncoder(int(config['rotary_sound']['GPIO_DT']),int(config['rotary_sound']['GPIO_CLK']),int(config['rotary_sound']['GPIO_SW']), self.rotary_event)
 
     with open('media.json', 'r') as config_file:
@@ -37,7 +37,7 @@ class Radio():
     # init default volume
     os.system(f"amixer -q sset PCM '{self.default_volume}%'")
     print("Radio started")
-    
+
   def __update_oled(self, msg):
     try:
       data = {"cmd": "media_text", "text": msg}
