@@ -151,7 +151,7 @@ def on_message(client, userdata, message, properties=None):
     elif payload['cmd'] == 'sound_off':
       os.system("amixer -q sset PCM '1%'")
     elif payload['cmd'] == 'sound_on':
-      os.system(f"amixer -q sset PCM '{app.default_volume}'")
+      os.system(f"amixer -q sset PCM '{app.default_volume}%'")
     else:
       print(f"WTF! Topic: {message.topic}, payload: {payload}")
   except Exception as e:
