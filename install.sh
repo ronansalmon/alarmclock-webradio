@@ -16,13 +16,13 @@ sudo ln -sf /home/pi/alarmclock-webradio/alarmclock_oled.service /lib/systemd/sy
 sudo ln -sf /home/pi/alarmclock-webradio/alarmclock_menu.service /lib/systemd/system/alarmclock_menu.service
 sudo ln -sf /home/pi/alarmclock-webradio/alarmclock_radio.service /lib/systemd/system/alarmclock_radio.service
 sudo systemctl daemon-reload
+sudo systemctl enable --now systemd-time-wait-sync.service
 sudo systemctl start alarmclock_oled
 sudo systemctl start alarmclock_menu
 sudo systemctl start alarmclock_radio
 sudo systemctl enable alarmclock_oled
 sudo systemctl enable alarmclock_menu
 sudo systemctl enable alarmclock_radio
-
 
 sudo systemctl stop dbus
 sudo systemctl disable dbus
