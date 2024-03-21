@@ -1,11 +1,2 @@
 
-- load/save defaults
-- internet up ?
-
-
-- menu alarm
--- click toggle alarm
--- inc/alarm time up < 23:59 -> save value
--- dec/alarm time down < 00:00 -> save value
-
-
+- detect daylight saving time changes: should not be an issue since I usually don't need to set the alarm on sunday morning, well I sure hope so anyway !
