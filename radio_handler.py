@@ -7,6 +7,7 @@ import paho.mqtt.client as mqtt
 import paho.mqtt.publish as publish
 import multiprocessing as mp
 from rotary_class import RotaryEncoder
+import RPi.GPIO as GPIO
 
 
 client_id = "alarmclock_sound"
@@ -160,13 +161,26 @@ def on_message(client, userdata, message, properties=None):
 
 
 if __name__ == '__main__':
+  app = None
+  try:
+    app = Radio()
+
+    client = mqtt.Client(client_id=client_id, protocol=mqtt.MQTTv311, clean_session=True)
+    client.on_connect = on_connect
+    client.on_message = on_message
+    client.on_subscribe = on_subscribe
+    client.connect(host="127.0.0.1", port=1883, keepalive=60)
+
+    client.loop_forever()
+  except Exception as e:
+    if app is not None and app.process is not None:
+      app.process.terminate()
+      app.process.join()
+    traceback.print_exc()
+    print(e)
+  finally:
+    GPIO.cleanup()
+    
   app = Radio()
 
-  client = mqtt.Client(client_id=client_id, protocol=mqtt.MQTTv311, clean_session=True)
-  client.on_connect = on_connect
-  client.on_message = on_message
-  client.on_subscribe = on_subscribe
-  client.connect(host="127.0.0.1", port=1883, keepalive=60)
-
-  client.loop_forever()
 

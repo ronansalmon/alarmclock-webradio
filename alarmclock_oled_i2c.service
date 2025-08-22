@@ -2,8 +2,8 @@
 Description=rotary_handler
 
 [Service]
-User=pi
-ExecStart=/home/pi/alarmclock-webradio/service_oled.sh
+User=rsalmon
+ExecStart=/app/alarmclock-webradio/service_oled_i2c.sh
 
 [Install]
 WantedBy=multi-user.target

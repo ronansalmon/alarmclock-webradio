@@ -2,9 +2,9 @@
 DIR="$( dirname -- "${BASH_SOURCE[0]}"; )";
 cd ${DIR}
 
-source  ~/python/bin/activate
+source /app/python/bin/activate
 while true; do
-  python oled_handler.py
+  python oled_handler_spi.py
   sleep 2
 done
 

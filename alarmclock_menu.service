@@ -4,8 +4,8 @@ After=time-sync.target
 Wants=time-sync.target
 
 [Service]
-User=pi
-ExecStart=/home/pi/alarmclock-webradio/service_menu.sh
+User=rsalmon
+ExecStart=/app/alarmclock-webradio/service_menu.sh
 
 [Install]
 WantedBy=multi-user.target

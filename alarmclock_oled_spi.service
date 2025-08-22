@@ -3,7 +3,7 @@ Description=rotary_handler
 
 [Service]
 User=rsalmon
-ExecStart=/app/alarmclock-webradio/service_rotary.sh
+ExecStart=/app/alarmclock-webradio/service_oled_spi.sh
 
 [Install]
 WantedBy=multi-user.target

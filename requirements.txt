@@ -1,3 +1,7 @@
 spidev
 adafruit-circuitpython-ssd1306
 paho-mqtt
+RPi.LGPIO
+pillow
+hid
+hidapi

@@ -2,7 +2,7 @@
 DIR="$( dirname -- "${BASH_SOURCE[0]}"; )";
 cd ${DIR}
 
-source  ~/python/bin/activate
+source /app/python/bin/activate
 while true; do
   python radio_handler.py
   sleep 2

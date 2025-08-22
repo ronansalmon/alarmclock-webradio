@@ -1,0 +1,22 @@
+[default]
+sound_volume = 70
+
+[rotary_sound]
+gpio_clk = 26
+gpio_dt = 19
+gpio_sw = 13
+
+[rotary_menu]
+GPIO_CLK = 22
+GPIO_DT = 27
+GPIO_SW = 17
+
+[oled]
+address = 0x3c
+contrast = 255
+auto_refresh = 1
+
+[alarm]
+alarm_enable = True
+alarm_time = 25200
+ignore_ads = 30

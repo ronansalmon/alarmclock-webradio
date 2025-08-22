@@ -4,7 +4,7 @@ cd ${DIR}
 
 source /app/python/bin/activate
 while true; do
-  python menu_handler.py
+  python oled_handler_i2c.py
   sleep 2
 done
 
