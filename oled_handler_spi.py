@@ -20,13 +20,13 @@ topic = "alarmclock_oled"
 auto_refresh = 1
 
 # Setting some variables for our reset pin etc.
-spi = busio.SPI(clock=board.SCK, MOSI=board.MOSI)
-oled_cs = digitalio.DigitalInOut(board.CE0)
-oled_dc = digitalio.DigitalInOut(board.D25)
-oled_reset = digitalio.DigitalInOut(board.D24)
+spi = busio.SPI(clock=board.SCK, MOSI=board.MOSI)   // SCK: 23, MOSI: 19
+oled_cs = digitalio.DigitalInOut(board.CE0)         // CS:  24
+oled_dc = digitalio.DigitalInOut(board.D25)         // DC:  22
+oled_reset = digitalio.DigitalInOut(board.D24)      // RST: 18
 oled = None
 image = None
-fonttime = ImageFont.truetype("Courier_New_Bold", 42)
+fonttime = ImageFont.truetype("Courier_New", 42)
 fontother = ImageFont.truetype("DejaVuSerif",10)
 alarm_text = ""
 media_text = ""
