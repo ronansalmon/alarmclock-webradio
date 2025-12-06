@@ -23,10 +23,13 @@ class Menu():
   mode = 0
   alarm_time = 0
   alarm_enable = False
-  clockwise_time = 0
-  tick_count = 0
-  anticlockwise_time = 0
   ignore_ads = 0
+  
+  # New rotary handling variables
+  last_rotary_time = 0
+  last_rotary_direction = None
+  pending_timer = None
+  rotation_count = 0
 
   def __init__(self):
     # default values
@@ -113,82 +116,69 @@ class Menu():
       traceback.print_exc()
       print(e)
 
+  def process_accumulated_rotation(self):
+    """Process the accumulated rotations after a short delay"""
+    if self.mode == 1 and self.last_rotary_direction is not None:
+      # Determine increment based on rotation speed
+      # Un cran physique génère généralement 1-4 événements
+      if self.rotation_count <= 4:
+        increment = 60
+        speed_desc = "slow"
+      elif self.rotation_count <= 12:
+        increment = 600  
+        speed_desc = "medium"
+      else:
+        increment = 3600
+        speed_desc = "fast"
+      
+      if self.last_rotary_direction == RotaryEncoder.CLOCKWISE:
+        print(f"+{increment}s ({speed_desc}, {self.rotation_count} events)")
+        self.alarm_time = self.alarm_time + increment
+      else:
+        print(f"-{increment}s ({speed_desc}, {self.rotation_count} events)")
+        self.alarm_time = self.alarm_time - increment
+      
+      self.__update_oled(time.strftime("%H:%M", time.gmtime(self.alarm_time)) + " #")
+    
+    # Reset for next rotation
+    self.rotation_count = 0
+    self.last_rotary_direction = None
+    self.pending_timer = None
+
   def rotary_event(self, event):
     try:
-      if event == RotaryEncoder.CLOCKWISE:
-        if self.anticlockwise_time != 0:
-          # changed direction
-          self.clockwise_time = time.time()
-          self.anticlockwise_time = 0
-          self.tick_count = 0
-          if self.mode == 1:
-            self.alarm_time = self.alarm_time + 60
-            self.__update_oled(time.strftime("%H:%M", time.gmtime(self.alarm_time)) + " #")
-        else:
-          if self.clockwise_time != 0:
-            # not the first time
-            tickTime = time.time() - self.clockwise_time
-            self.clockwise_time = time.time()
-            if tickTime <= .05:
-              self.tick_count = self.tick_count + 1
-            else:
-              self.tick_count = 1
-
-            if self.tick_count < 5:
-              if self.mode == 1:
-                self.alarm_time = self.alarm_time + 60
-                self.__update_oled(time.strftime("%H:%M", time.gmtime(self.alarm_time)) + " #")
-            elif self.tick_count < 10:
-              if self.mode == 1:
-                self.alarm_time = self.alarm_time + 600
-                self.__update_oled(time.strftime("%H:%M", time.gmtime(self.alarm_time)) + " #")
-            else:
-              if self.mode == 1:
-                self.alarm_time = self.alarm_time + 3600
-                self.__update_oled(time.strftime("%H:%M", time.gmtime(self.alarm_time)) + " #")
-          else:
-            self.clockwise_time = time.time()
-            self.anticlockwise_time = 0
-            self.tick_count = 0
-
-      elif event == RotaryEncoder.ANTICLOCKWISE:
-        if self.clockwise_time != 0:
-          # changed direction
-          self.anticlockwise_time = time.time()
-          self.clockwise_time = 0
-          self.tick_count = 0
-          if self.mode == 1:
-            self.alarm_time = self.alarm_time - 60
-            self.__update_oled(time.strftime("%H:%M", time.gmtime(self.alarm_time)) + " #")
-        else:
-          if self.anticlockwise_time != 0:
-            # not the first time
-            tickTime = time.time() - self.anticlockwise_time
-            self.anticlockwise_time = time.time()
-            if tickTime <= .05:
-              self.tick_count = self.tick_count + 1
-            else:
-              self.tick_count = 1
-
-            if self.tick_count < 5:
-              if self.mode == 1:
-                self.alarm_time = self.alarm_time - 60
-                self.__update_oled(time.strftime("%H:%M", time.gmtime(self.alarm_time)) + " #")
-            elif self.tick_count < 10:
-              if self.mode == 1:
-                self.alarm_time = self.alarm_time - 600
-                self.__update_oled(time.strftime("%H:%M", time.gmtime(self.alarm_time)) + " #")
-            else:
-              if self.mode == 1:
-                self.alarm_time = self.alarm_time - 3600
-                self.__update_oled(time.strftime("%H:%M", time.gmtime(self.alarm_time)) + " #")
-          else:
-            self.anticlockwise_time = time.time()
-            self.clockwise_time = 0
-            self.tick_count = 0
-            if self.mode == 1:
-              self.alarm_time = self.alarm_time - 60
-              self.__update_oled(time.strftime("%H:%M", time.gmtime(self.alarm_time)) + " #")
+      current_time = time.time()
+      
+      if event in [RotaryEncoder.CLOCKWISE, RotaryEncoder.ANTICLOCKWISE]:
+        # Cancel any pending timer
+        if self.pending_timer is not None:
+          self.pending_timer.cancel()
+        
+        # If this is the first rotation or same direction as before
+        if (self.last_rotary_direction is None or 
+            self.last_rotary_direction == event or 
+            current_time - self.last_rotary_time > 0.3):
+          
+          # Reset if direction changed or too much time passed
+          if (self.last_rotary_direction is not None and 
+              self.last_rotary_direction != event):
+            print(f"Direction changed from {'CW' if self.last_rotary_direction == RotaryEncoder.CLOCKWISE else 'CCW'} to {'CW' if event == RotaryEncoder.CLOCKWISE else 'CCW'}")
+            self.rotation_count = 0
+          
+          # If it's been too long since last rotation, reset count
+          if current_time - self.last_rotary_time > 0.3:
+            self.rotation_count = 0
+          
+          self.last_rotary_direction = event
+          self.rotation_count += 1
+          self.last_rotary_time = current_time
+          
+          print(f"Rotation {'CW' if event == RotaryEncoder.CLOCKWISE else 'CCW'} #{self.rotation_count}")
+          
+          # Start a timer to process the rotation after a short delay
+          # This allows multiple rapid events to accumulate
+          self.pending_timer = threading.Timer(0.2, self.process_accumulated_rotation)
+          self.pending_timer.start()
 
       elif event == RotaryEncoder.BUTTONDOWN:
         self.button_last_down = time.time()
