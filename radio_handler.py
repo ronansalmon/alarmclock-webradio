@@ -6,7 +6,7 @@ import traceback
 import paho.mqtt.client as mqtt
 import paho.mqtt.publish as publish
 import multiprocessing as mp
-from rotary_class import RotaryEncoder
+from rotary import RotaryEncoder
 import RPi.GPIO as GPIO
 
 
@@ -30,8 +30,21 @@ class Radio():
     config.read('config.ini')
     self.default_volume = config['default']['sound_volume']
 
-    rotary = RotaryEncoder(int(config['rotary_sound']['GPIO_DT']),int(config['rotary_sound']['GPIO_CLK']),int(config['rotary_sound']['GPIO_SW']), self.rotary_event)
+    self.rotary = RotaryEncoder(
+      int(config['rotary_sound']['GPIO_DT']),
+      int(config['rotary_sound']['GPIO_CLK']),
+      int(config['rotary_sound']['GPIO_SW']), 
+      2
+    )
 
+    self.rotary.register(
+      increment=self.menu_increment,
+      decrement=self.menu_decrement,
+      pressed=self.menu_pressed,
+      bounce=100
+    )
+    self.rotary.start()
+    
     with open('media.json', 'r') as config_file:
       self.playlist = json.load(config_file)
 
@@ -95,6 +108,15 @@ class Radio():
       self.__update_oled("")
       proc.kill()
       os.system('killall -9 ffplay')
+
+  def menu_increment(self):
+    self.rotary_event(RotaryEncoder.CLOCKWISE)
+
+  def menu_decrement(self):
+    self.rotary_event(RotaryEncoder.ANTICLOCKWISE)
+  
+  def menu_pressed(self, event):
+    self.rotary_event(event)
 
   def rotary_event(self, event):
     try:

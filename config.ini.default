@@ -13,7 +13,7 @@ GPIO_SW = 17
 
 [oled]
 address = 0x3c
-contrast = 255
+contrast = 210
 auto_refresh = 1
 
 [alarm]

@@ -9,7 +9,7 @@ import os.path
 import shutil
 from datetime import datetime
 from datetime import timedelta
-from rotary_class import RotaryEncoder
+from rotary import RotaryEncoder
 import RPi.GPIO as GPIO
 
 client_id_publish = "publish-rotary-menu"
@@ -44,12 +44,15 @@ class Menu():
       self.process.start()
       self.__update_oled(time.strftime("%H:%M", time.gmtime(self.alarm_time)))
 
-    rotary = RotaryEncoder(
+    self.rotary = RotaryEncoder(
       int(self.config['rotary_menu']['GPIO_DT']),
       int(self.config['rotary_menu']['GPIO_CLK']),
       int(self.config['rotary_menu']['GPIO_SW']),
-      self.rotary_event
+      2
     )
+    self.rotary.register(increment=self.menu_increment,decrement=self.menu_decrement,pressed=self.menu_pressed,bounce=100)
+    self.rotary.start()
+    
     print("Menu Handler Started")
 
   def __update_oled(self, msg, cmd="alarm_text"):
@@ -58,7 +61,6 @@ class Menu():
       publish.single(topic_oled, payload=json.dumps(data), retain=False,
         hostname="127.0.0.1", port=1883, client_id=client_id_publish,
         keepalive=60, will=None, auth=None, tls=None, transport="tcp")
-
     except Exception as e:
       traceback.print_exc()
       print(e)
@@ -118,75 +120,63 @@ class Menu():
 
   def process_accumulated_rotation(self):
     """Process the accumulated rotations after a short delay"""
-    if self.mode == 1 and self.last_rotary_direction is not None:
-      # Determine increment based on rotation speed
-      # Un cran physique génère généralement 1-4 événements
-      if self.rotation_count <= 4:
-        increment = 60
-        speed_desc = "slow"
-      elif self.rotation_count <= 12:
-        increment = 600  
-        speed_desc = "medium"
-      else:
-        increment = 3600
-        speed_desc = "fast"
-      
-      if self.last_rotary_direction == RotaryEncoder.CLOCKWISE:
-        print(f"+{increment}s ({speed_desc}, {self.rotation_count} events)")
-        self.alarm_time = self.alarm_time + increment
-      else:
-        print(f"-{increment}s ({speed_desc}, {self.rotation_count} events)")
-        self.alarm_time = self.alarm_time - increment
-      
-      self.__update_oled(time.strftime("%H:%M", time.gmtime(self.alarm_time)) + " #")
     
-    # Reset for next rotation
-    self.rotation_count = 0
-    self.last_rotary_direction = None
-    self.pending_timer = None
+    if self.rotation_count <= 4:
+      increment = 60
+      speed_desc = "slow"
+    else:
+      increment = 600
+      speed_desc = "medium"
+
+    if self.last_rotary_direction == RotaryEncoder.CLOCKWISE:
+      print(f"+{increment}s ({speed_desc}, {self.rotation_count} events)")
+      self.alarm_time = self.alarm_time + increment
+    else:
+      print(f"-{increment}s ({speed_desc}, {self.rotation_count} events)")
+      self.alarm_time = self.alarm_time - increment
+
+    self.__update_oled(time.strftime("%H:%M", time.gmtime(self.alarm_time)) + " #")
+    
+  def menu_increment(self):
+    self.rotary_event(RotaryEncoder.CLOCKWISE)
+
+  def menu_decrement(self):
+    self.rotary_event(RotaryEncoder.ANTICLOCKWISE)
+  
+  def menu_pressed(self, event):
+    self.rotary_event(event)
 
   def rotary_event(self, event):
     try:
       current_time = time.time()
-      
-      if event in [RotaryEncoder.CLOCKWISE, RotaryEncoder.ANTICLOCKWISE]:
-        # Cancel any pending timer
-        if self.pending_timer is not None:
-          self.pending_timer.cancel()
-        
-        # If this is the first rotation or same direction as before
-        if (self.last_rotary_direction is None or 
-            self.last_rotary_direction == event or 
-            current_time - self.last_rotary_time > 0.3):
-          
-          # Reset if direction changed or too much time passed
-          if (self.last_rotary_direction is not None and 
-              self.last_rotary_direction != event):
-            print(f"Direction changed from {'CW' if self.last_rotary_direction == RotaryEncoder.CLOCKWISE else 'CCW'} to {'CW' if event == RotaryEncoder.CLOCKWISE else 'CCW'}")
-            self.rotation_count = 0
-          
-          # If it's been too long since last rotation, reset count
-          if current_time - self.last_rotary_time > 0.3:
-            self.rotation_count = 0
-          
+
+      if self.mode == 1 and event in [RotaryEncoder.CLOCKWISE, RotaryEncoder.ANTICLOCKWISE]:
+
+        # this is the first rotation
+        if (self.last_rotary_direction is None):
           self.last_rotary_direction = event
+          self.rotation_count = 1
+
+        # Reset if direction changed or too much time passed
+        elif self.last_rotary_direction != event:
+          self.last_rotary_direction = event
+          self.rotation_count = 1
+
+        else:
+          # If it's been too long since last rotation, reset count
+          if current_time - self.last_rotary_time > 0.4:
+            self.rotation_count = 0
+
           self.rotation_count += 1
           self.last_rotary_time = current_time
-          
-          print(f"Rotation {'CW' if event == RotaryEncoder.CLOCKWISE else 'CCW'} #{self.rotation_count}")
-          
-          # Start a timer to process the rotation after a short delay
-          # This allows multiple rapid events to accumulate
-          self.pending_timer = threading.Timer(0.2, self.process_accumulated_rotation)
-          self.pending_timer.start()
+
+        self.process_accumulated_rotation()
+
 
       elif event == RotaryEncoder.BUTTONDOWN:
+        self.last_rotary_direction = None
         self.button_last_down = time.time()
       elif event == RotaryEncoder.BUTTONUP:
-
-        if self.button_last_down == 0:
-          # Ignore noise
-          return
 
         buttonTime = time.time() - self.button_last_down
         self.button_last_down = 0
@@ -194,7 +184,7 @@ class Menu():
         if buttonTime <= .01:
           # Ignore noise
           return
-        elif buttonTime > 1:
+        elif buttonTime > 2:
           # mode alarm setup
           self.mode = 1
           self.__update_oled(0.4, "alarm_setup")
@@ -264,6 +254,7 @@ if __name__ == '__main__':
     if app is not None and app.process is not None:
       app.process.terminate()
       app.process.join()
+      app.rotary.stop()
     traceback.print_exc()
     print(e)
   finally:
