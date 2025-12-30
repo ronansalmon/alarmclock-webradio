@@ -1,5 +1,7 @@
 [Unit]
 Description=radio_handler
+After=mosquitto.service
+Wants=mosquitto.service
 
 [Service]
 User=rsalmon

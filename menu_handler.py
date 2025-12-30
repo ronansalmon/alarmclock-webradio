@@ -45,12 +45,17 @@ class Menu():
       self.__update_oled(time.strftime("%H:%M", time.gmtime(self.alarm_time)))
 
     self.rotary = RotaryEncoder(
-      int(self.config['rotary_menu']['GPIO_DT']),
-      int(self.config['rotary_menu']['GPIO_CLK']),
-      int(self.config['rotary_menu']['GPIO_SW']),
+      int(self.config['rotary_menu']['gpio_dt']),
+      int(self.config['rotary_menu']['gpio_clk']),
+      int(self.config['rotary_menu']['gpio_sw']),
       2
     )
-    self.rotary.register(increment=self.menu_increment,decrement=self.menu_decrement,pressed=self.menu_pressed,bounce=100)
+    self.rotary.register(
+      increment=self.menu_increment,
+      decrement=self.menu_decrement,
+      pressed=self.menu_pressed,
+      bounce=10
+    )
     self.rotary.start()
     
     print("Menu Handler Started")
@@ -92,7 +97,7 @@ class Menu():
 
         print(f"Sleeping for {sleep} seconds")
         time.sleep(sleep)
-        # time to wakeup now !
+        print(f"time to wake up now!")
 
         data = {"cmd": "simple_push"}
         publish.single(topic_sound, payload=json.dumps(data), retain=False,
@@ -144,47 +149,20 @@ class Menu():
     self.rotary_event(RotaryEncoder.ANTICLOCKWISE)
   
   def menu_pressed(self, event):
-    self.rotary_event(event)
-
-  def rotary_event(self, event):
+    #print(f"event {event} {time.time()}")
     try:
-      current_time = time.time()
-
-      if self.mode == 1 and event in [RotaryEncoder.CLOCKWISE, RotaryEncoder.ANTICLOCKWISE]:
-
-        # this is the first rotation
-        if (self.last_rotary_direction is None):
-          self.last_rotary_direction = event
-          self.rotation_count = 1
-
-        # Reset if direction changed or too much time passed
-        elif self.last_rotary_direction != event:
-          self.last_rotary_direction = event
-          self.rotation_count = 1
-
-        else:
-          # If it's been too long since last rotation, reset count
-          if current_time - self.last_rotary_time > 0.4:
-            self.rotation_count = 0
-
-          self.rotation_count += 1
-          self.last_rotary_time = current_time
-
-        self.process_accumulated_rotation()
-
-
-      elif event == RotaryEncoder.BUTTONDOWN:
-        self.last_rotary_direction = None
+      if event == RotaryEncoder.BUTTONDOWN:
         self.button_last_down = time.time()
       elif event == RotaryEncoder.BUTTONUP:
 
+        # button released
         buttonTime = time.time() - self.button_last_down
         self.button_last_down = 0
 
         if buttonTime <= .01:
-          # Ignore noise
+          print("Ignore noise")
           return
-        elif buttonTime > 2:
+        elif buttonTime > 1:
           # mode alarm setup
           self.mode = 1
           self.__update_oled(0.4, "alarm_setup")
@@ -235,6 +213,36 @@ class Menu():
             self.process = mp.Process(target=self.thread_alarm)
             self.process.start()
             self.__update_oled(time.strftime("%H:%M", time.gmtime(self.alarm_time)))
+
+    except Exception as e:
+      traceback.print_exc()
+      print(e)
+
+  def rotary_event(self, event):
+    try:
+      current_time = time.time()
+
+      if self.mode == 1 and event in [RotaryEncoder.CLOCKWISE, RotaryEncoder.ANTICLOCKWISE]:
+
+        # this is the first rotation
+        if (self.last_rotary_direction is None):
+          self.last_rotary_direction = event
+          self.rotation_count = 1
+
+        # Reset if direction changed or too much time passed
+        elif self.last_rotary_direction != event:
+          self.last_rotary_direction = event
+          self.rotation_count = 1
+
+        else:
+          # If it's been too long since last rotation, reset count
+          if current_time - self.last_rotary_time > 0.4:
+            self.rotation_count = 0
+
+          self.rotation_count += 1
+          self.last_rotary_time = current_time
+
+        self.process_accumulated_rotation()
 
     except Exception as e:
       traceback.print_exc()

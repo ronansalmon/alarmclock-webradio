@@ -1,7 +1,8 @@
 spidev
 adafruit-circuitpython-ssd1306
 paho-mqtt
-RPi.LGPIO
+RPi.GPIO
 pillow
 hid
 hidapi
+pyky040

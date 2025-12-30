@@ -31,9 +31,9 @@ class Radio():
     self.default_volume = config['default']['sound_volume']
 
     self.rotary = RotaryEncoder(
-      int(config['rotary_sound']['GPIO_DT']),
-      int(config['rotary_sound']['GPIO_CLK']),
-      int(config['rotary_sound']['GPIO_SW']), 
+      int(config['rotary_sound']['gpio_dt']),
+      int(config['rotary_sound']['gpio_clk']),
+      int(config['rotary_sound']['gpio_sw']), 
       2
     )
 
@@ -41,7 +41,7 @@ class Radio():
       increment=self.menu_increment,
       decrement=self.menu_decrement,
       pressed=self.menu_pressed,
-      bounce=100
+      bounce=10
     )
     self.rotary.start()
     
@@ -116,28 +116,25 @@ class Radio():
     self.rotary_event(RotaryEncoder.ANTICLOCKWISE)
   
   def menu_pressed(self, event):
-    self.rotary_event(event)
-
-  def rotary_event(self, event):
+    #print(f"event {event} {time.time()}")
     try:
-      if event == RotaryEncoder.CLOCKWISE:
-        os.system("amixer -q sset PCM '100%+'")
-      elif event == RotaryEncoder.ANTICLOCKWISE:
-        os.system("amixer -q sset PCM '100%-'")
-      elif event == RotaryEncoder.BUTTONDOWN:
+      if event == RotaryEncoder.BUTTONDOWN:
         self.button_last_down = time.time()
       elif event == RotaryEncoder.BUTTONUP:
         if self.button_last_down == 0:
-          # Ignore noise
+          # we must have a button DOWN before UP
+          print("Ignore noise down")
           return
 
+        # button released
         buttonTime = time.time() - self.button_last_down
         self.button_last_down = 0
-      
+        
         if buttonTime <= .01:
-          # Ignore noise
+          print("Ignore noise")
           return
-        elif buttonTime > 0.5:
+        elif buttonTime > 1:
+          # long press
           # kill ffplay to move on the next available radio/file
           os.system('killall -9 ffplay')
         else:
@@ -156,6 +153,18 @@ class Radio():
     except Exception as e:
       traceback.print_exc()
       print(e)
+
+  def rotary_event(self, event):
+    try:
+      if event == RotaryEncoder.CLOCKWISE:
+        os.system("amixer -q sset PCM '100%+'")
+      elif event == RotaryEncoder.ANTICLOCKWISE:
+        os.system("amixer -q sset PCM '100%-'")
+      else:
+        print("something went wrong! {event}")
+    except Exception as e:
+      traceback.print_exc()
+      print(e)
       
 def on_connect(client, userdata, flags, reason_code, properties=None):
   client.subscribe(topic=topic_sound)
@@ -168,9 +177,9 @@ def on_message(client, userdata, message, properties=None):
   try:
     payload = json.loads(message.payload)
     if payload['cmd'] == 'simple_push':
-      app.rotary_event(RotaryEncoder.BUTTONDOWN)
+      app.menu_pressed(RotaryEncoder.BUTTONDOWN)
       time.sleep(0.2)
-      app.rotary_event(RotaryEncoder.BUTTONUP)
+      app.menu_pressed(RotaryEncoder.BUTTONUP)
     elif payload['cmd'] == 'sound_off':
       os.system("amixer -q sset PCM '1%'")
     elif payload['cmd'] == 'sound_on':

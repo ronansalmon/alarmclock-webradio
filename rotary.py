@@ -13,7 +13,8 @@ class RotaryEncoder:
     ANTICLOCKWISE=2
     BUTTONDOWN=3
     BUTTONUP=4
-    button_laststate = 0
+    BUTTONPRESSED=5
+    button_laststate = -1
     
     def setup(self):
     
@@ -27,11 +28,11 @@ class RotaryEncoder:
           GPIO.remove_event_detect(self.pins['sw'])
 
           # Add event detection to the GPIO inputs
-          GPIO.add_event_detect(self.pins['sw'], GPIO.BOTH, callback=self.button_event, bouncetime=10)
+          GPIO.add_event_detect(self.pins['sw'], GPIO.BOTH, callback=self.button_event, bouncetime=self.bounce)
         except Exception as e:
           print(f"add_event_detect failed for pin {self.pins['sw']}: {e}")
 
-    def __init__(self,clk = None,dt = None,sw = None, tick = 2, bounce=500):
+    def __init__(self,clk = None,dt = None,sw = None, tick = 2, bounce=30):
         if not clk or not dt or not sw:
             raise BaseException("Invalid Configuration: CLK, DT and SW must be specified")
         self.pins = {"clk":clk,"dt":dt,"sw":sw}
@@ -39,7 +40,6 @@ class RotaryEncoder:
         self.bounce = bounce
         self.increment, self.decrement, self.switched, self.changed = None,None,None,None
         self.setup()
-
 
     def register(self, **params):
         if 'increment' in params:
@@ -55,14 +55,18 @@ class RotaryEncoder:
     def button_event(self, button):
         if GPIO.input(button):
             event = self.BUTTONUP
-            self.button_laststate = 1
         else:
-            if self.button_laststate == 0:
+            event = self.BUTTONDOWN 
+        
+        if event == self.button_laststate:
+            if event == self.BUTTONDOWN:
+                # force release, junky rotary
                 event = self.BUTTONUP
-                self.button_laststate = 1
             else:
-                event = self.BUTTONDOWN 
-                self.button_laststate = 0
+                # ignore noise
+                return
+
+        self.button_laststate = event        
         self.switched(event)
         return
 
