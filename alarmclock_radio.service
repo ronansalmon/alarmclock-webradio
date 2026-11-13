@@ -1,5 +1,7 @@
 [Unit]
 Description=radio_handler
+After=time-sync.target
+Wants=time-sync.target
 After=mosquitto.service
 Wants=mosquitto.service
 

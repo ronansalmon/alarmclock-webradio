@@ -1,8 +1,12 @@
 [Unit]
 Description=rotary_handler
+After=mosquitto.service
+Wants=mosquitto.service
 
 [Service]
 User=rsalmon
+Restart=on-failure
+RestartSec=3
 ExecStart=/app/alarmclock-webradio/service_oled_i2c.sh
 
 [Install]
